@@ -1,4 +1,5 @@
 use std::borrow::Borrow;
+use std::fmt;
 use std::hash::{BuildHasher, Hash, RandomState};
 use std::pin::pin;
 use std::sync::Arc;
@@ -17,6 +18,32 @@ use tokio::sync::Notify;
 /// of this, it's common to wrap the `V` in an `Arc<V>` to make cloning cheap.
 pub struct OnceMap<K, V, H = RandomState> {
     items: DashMap<K, Value<V>, H>,
+}
+
+impl<K, V, H> fmt::Debug for OnceMap<K, V, H>
+where
+    K: Eq + Hash + fmt::Debug,
+    V: fmt::Debug,
+    H: BuildHasher + Clone,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.items.fmt(f)
+    }
+}
+
+impl<K, V, H> FromIterator<(K, V)> for OnceMap<K, V, H>
+where
+    K: Eq + Hash,
+    H: Default + Clone + BuildHasher,
+{
+    fn from_iter<T: IntoIterator<Item = (K, V)>>(iter: T) -> Self {
+        OnceMap {
+            items: iter
+                .into_iter()
+                .map(|(k, v)| (k, Value::Filled(v)))
+                .collect(),
+        }
+    }
 }
 
 impl<K: Eq + Hash, V: Clone, H: BuildHasher + Clone> OnceMap<K, V, H> {
@@ -124,6 +151,7 @@ impl<K: Eq + Hash + Clone, V, H: Default + BuildHasher + Clone> Default for Once
     }
 }
 
+#[derive(Debug)]
 enum Value<V> {
     Waiting(Arc<Notify>),
     Filled(V),

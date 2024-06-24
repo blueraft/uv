@@ -188,8 +188,7 @@ pub(super) async fn do_lock(
     let resolution = match lock {
         Some(lock) => {
             // Prefill the index with the lockfile.
-            let tags = interpreter.tags()?;
-            let index = lock.to_index(workspace, tags)?;
+            let index = lock.to_index(workspace)?;
 
             // Create a build dispatch.
             //

@@ -512,7 +512,7 @@ impl Lock {
     }
 
     /// Convert the [`Lock`] to a [`InMemoryIndex`] that can be used for resolution.
-    pub fn to_index(self, workspace: &Workspace, tags: &Tags) -> Result<InMemoryIndex, LockError> {
+    pub fn to_index(self, workspace: &Workspace) -> Result<InMemoryIndex, LockError> {
         let distributions = FxOnceMap::default();
         let mut packages: HashMap<_, BTreeMap<Version, PrioritizedDist>> = HashMap::new();
 

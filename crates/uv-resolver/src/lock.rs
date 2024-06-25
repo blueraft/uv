@@ -24,7 +24,9 @@ use distribution_types::{
     WheelCompatibility,
 };
 use pep440_rs::{Version, VersionSpecifiers};
-use pep508_rs::{MarkerEnvironment, MarkerTree, VerbatimUrl, VerbatimUrlError};
+use pep508_rs::{
+    ExtraOperator, MarkerEnvironment, MarkerExpression, MarkerTree, VerbatimUrl, VerbatimUrlError,
+};
 use platform_tags::{TagCompatibility, TagPriority, Tags};
 use pypi_types::{
     HashDigest, ParsedArchiveUrl, ParsedGitUrl, ParsedUrl, Requirement, RequirementSource,
@@ -756,7 +758,7 @@ impl Distribution {
 
                 // Add any wheels.
                 for wheel in &self.wheels {
-                    let hash = wheel.hash.iter().map(|h| h.0.clone());
+                    let hash = wheel.hash.as_ref().map(|h| h.0.clone());
                     let wheel = wheel.to_registry_dist(url);
                     let compat =
                         WheelCompatibility::Compatible(HashComparison::Matched, None, None);
@@ -775,7 +777,7 @@ impl Distribution {
     fn into_metadata(self, workspace_root: &Path) -> Result<Metadata, LockError> {
         let name = self.name().clone();
         let version = self.id.version.clone();
-        let provides_extras = self.optional_dependencies.into_keys().collect();
+        let provides_extras = self.optional_dependencies.keys().cloned().collect();
 
         let mut dependency_extras = HashMap::new();
         let mut requires_dist = self
@@ -786,7 +788,29 @@ impl Distribution {
                     .transpose()
             })
             .collect::<Result<Vec<_>, LockError>>()?;
-        // Denormalize extras.
+
+        // Denormalize optional dependencies.
+        for (extra, deps) in self.optional_dependencies {
+            for dep in deps {
+                if let Some(mut dep) =
+                    dep.into_requirement(workspace_root, &mut dependency_extras)?
+                {
+                    // Add back the extra marker expression.
+                    let marker = MarkerTree::Expression(MarkerExpression::Extra {
+                        operator: ExtraOperator::Equal,
+                        name: extra.clone(),
+                    });
+                    match dep.marker {
+                        Some(ref mut tree) => tree.and(marker),
+                        None => dep.marker = Some(marker),
+                    }
+
+                    requires_dist.push(dep);
+                }
+            }
+        }
+
+        // Denormalize extras for each dependency.
         for req in &mut requires_dist {
             if let Some(extras) = dependency_extras.remove(&req.name) {
                 req.extras = extras;
@@ -806,7 +830,7 @@ impl Distribution {
                     })
                     .collect::<Result<Vec<_>, LockError>>()?;
 
-                // Denormalize extras.
+                // Denormalize extras for each development dependency.
                 for dep in &mut deps {
                     if let Some(extras) = dependency_extras.remove(&dep.name) {
                         dep.extras = extras;

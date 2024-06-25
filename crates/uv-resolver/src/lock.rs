@@ -30,7 +30,7 @@ use pypi_types::{
     HashDigest, ParsedArchiveUrl, ParsedGitUrl, ParsedUrl, Requirement, RequirementSource,
 };
 use uv_configuration::ExtrasSpecification;
-use uv_distribution::{Metadata, Workspace};
+use uv_distribution::{ArchiveMetadata, Metadata, Workspace};
 use uv_git::{GitReference, GitSha, RepositoryReference, ResolvedRepositoryReference};
 use uv_normalize::{ExtraName, GroupName, PackageName};
 
@@ -531,13 +531,14 @@ impl Lock {
                     .insert(distribution.id.version.clone(), prioritized_dist);
             }
 
-            // Add metadata to the distributions index.
+            // Extract the distribution metadata.
             let version_id = distribution.version_id(workspace.root())?;
+            let hashes = distribution.hashes();
             let metadata = distribution.into_metadata(workspace.root())?;
-            distributions.done(
-                version_id,
-                Arc::new(MetadataResponse::Found(metadata.into())),
-            );
+
+            // Add metadata to the distributions index.
+            let response = MetadataResponse::Found(ArchiveMetadata::with_hashes(metadata, hashes));
+            distributions.done(version_id, Arc::new(response));
         }
 
         let packages = packages
@@ -749,14 +750,7 @@ impl Distribution {
                 {
                     // When resolving from a lockfile all sources are equally compatible.
                     let compat = SourceDistCompatibility::Compatible(HashComparison::Matched);
-
-                    let metadata = match self.sdist {
-                        Some(SourceDist::Url { ref metadata, .. }) => metadata,
-                        Some(SourceDist::Path { ref metadata, .. }) => metadata,
-                        None => unreachable!(),
-                    };
-                    let hash = metadata.hash.0.clone();
-
+                    let hash = self.sdist.as_ref().unwrap().hash().0.clone();
                     prioritized_dist.insert_source(sdist, iter::once(hash), compat);
                 };
 
@@ -972,6 +966,18 @@ impl Distribution {
             }
         }
         best.map(|(_, i)| i)
+    }
+
+    /// Returns all the hashes associated with this [`Distribution`].
+    fn hashes(&self) -> Vec<HashDigest> {
+        let mut hashes = Vec::new();
+        if let Some(ref sdist) = self.sdist {
+            hashes.push(sdist.hash().0.clone());
+        }
+        for wheel in &self.wheels {
+            hashes.extend(wheel.hash.as_ref().map(|h| h.0.clone()));
+        }
+        hashes
     }
 
     /// Returns the [`PackageName`] of the distribution.

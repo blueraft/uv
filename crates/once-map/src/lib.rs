@@ -20,32 +20,6 @@ pub struct OnceMap<K, V, H = RandomState> {
     items: DashMap<K, Value<V>, H>,
 }
 
-impl<K, V, H> fmt::Debug for OnceMap<K, V, H>
-where
-    K: Eq + Hash + fmt::Debug,
-    V: fmt::Debug,
-    H: BuildHasher + Clone,
-{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.items.fmt(f)
-    }
-}
-
-impl<K, V, H> FromIterator<(K, V)> for OnceMap<K, V, H>
-where
-    K: Eq + Hash,
-    H: Default + Clone + BuildHasher,
-{
-    fn from_iter<T: IntoIterator<Item = (K, V)>>(iter: T) -> Self {
-        OnceMap {
-            items: iter
-                .into_iter()
-                .map(|(k, v)| (k, Value::Filled(v)))
-                .collect(),
-        }
-    }
-}
-
 impl<K: Eq + Hash, V: Clone, H: BuildHasher + Clone> OnceMap<K, V, H> {
     /// Register that you want to start a job.
     ///
@@ -148,6 +122,32 @@ impl<K: Eq + Hash + Clone, V, H: Default + BuildHasher + Clone> Default for Once
         Self {
             items: DashMap::with_hasher(H::default()),
         }
+    }
+}
+
+impl<K, V, H> FromIterator<(K, V)> for OnceMap<K, V, H>
+where
+    K: Eq + Hash,
+    H: Default + Clone + BuildHasher,
+{
+    fn from_iter<T: IntoIterator<Item = (K, V)>>(iter: T) -> Self {
+        OnceMap {
+            items: iter
+                .into_iter()
+                .map(|(k, v)| (k, Value::Filled(v)))
+                .collect(),
+        }
+    }
+}
+
+impl<K, V, H> fmt::Debug for OnceMap<K, V, H>
+where
+    K: Eq + Hash + fmt::Debug,
+    V: fmt::Debug,
+    H: BuildHasher + Clone,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.items.fmt(f)
     }
 }
 

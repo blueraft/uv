@@ -248,60 +248,59 @@ pub(super) async fn do_lock(
     };
 
     // If the lockfile was not enough to obtain a resolution, do a full resolve.
-    let resolution = match resolution {
-        Some(resolution) => resolution,
-        None => {
-            // Create a fresh index.
-            let index = InMemoryIndex::default();
+    let resolution = if let Some(resolution) = resolution {
+        resolution
+    } else {
+        // Create a fresh index.
+        let index = InMemoryIndex::default();
 
-            // Create a build dispatch.
-            let build_dispatch = BuildDispatch::new(
-                &client,
-                cache,
-                interpreter,
-                index_locations,
-                &flat_index,
-                &index,
-                &git,
-                &in_flight,
-                index_strategy,
-                setup_py,
-                config_setting,
-                build_isolation,
-                link_mode,
-                build_options,
-                exclude_newer,
-                concurrency,
-                preview,
-            );
+        // Create a build dispatch.
+        let build_dispatch = BuildDispatch::new(
+            &client,
+            cache,
+            interpreter,
+            index_locations,
+            &flat_index,
+            &index,
+            &git,
+            &in_flight,
+            index_strategy,
+            setup_py,
+            config_setting,
+            build_isolation,
+            link_mode,
+            build_options,
+            exclude_newer,
+            concurrency,
+            preview,
+        );
 
-            pip::operations::resolve(
-                requirements,
-                constraints,
-                overrides,
-                dev,
-                source_trees,
-                None,
-                &extras,
-                preferences,
-                EmptyInstalledPackages,
-                &hasher,
-                &Reinstall::default(),
-                &upgrade,
-                None,
-                None,
-                python_requirement,
-                &client,
-                &flat_index,
-                &index,
-                &build_dispatch,
-                concurrency,
-                options,
-                printer,
-                preview,
-            )
-            .await?
-        }
+        pip::operations::resolve(
+            requirements,
+            constraints,
+            overrides,
+            dev,
+            source_trees,
+            None,
+            &extras,
+            preferences,
+            EmptyInstalledPackages,
+            &hasher,
+            &Reinstall::default(),
+            upgrade,
+            None,
+            None,
+            python_requirement,
+            &client,
+            &flat_index,
+            &index,
+            &build_dispatch,
+            concurrency,
+            options,
+            printer,
+            preview,
+        )
+        .await?
     };
 
     // Notify the user of any resolution diagnostics.

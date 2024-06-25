@@ -519,10 +519,14 @@ impl Lock {
         let mut packages: HashMap<_, BTreeMap<Version, PrioritizedDist>> = HashMap::new();
 
         for distribution in self.distributions {
-            // Must skip workspace packages as their dependencies may have changed without
-            // a version change.
-            if workspace.packages().contains_key(distribution.name()) {
-                continue;
+            match distribution.id.source {
+                Source::Registry(..) | Source::Git(..) => {}
+                // Skip local and direct URL dependencies, as their metadata may have been mutated
+                // without a version change.
+                Source::Path(..)
+                | Source::Directory(..)
+                | Source::Editable(..)
+                | Source::Direct(..) => continue,
             }
 
             // Add registry distributions to the package index.

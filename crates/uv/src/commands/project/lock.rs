@@ -190,6 +190,7 @@ pub(super) async fn do_lock(
 
     // Try resolving from the lockfile.
     let resolution = match lock {
+        None => None,
         Some(lock) => {
             // Prefill the index with the lockfile.
             let index = lock.to_index(workspace)?;
@@ -248,7 +249,6 @@ pub(super) async fn do_lock(
             .await
             .ok()
         }
-        None => None,
     };
 
     // If the lockfile was not enough to obtain a resolution, do a full resolve.

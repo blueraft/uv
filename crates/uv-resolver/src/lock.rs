@@ -550,7 +550,6 @@ impl Lock {
         let packages = packages
             .into_iter()
             .map(|(name, versions)| {
-                // TODO(ibraheem): should all distributions be in the same `VersionMap`?
                 let response = VersionsResponse::Found(vec![VersionMap::from(versions)]);
                 (name, Arc::new(response))
             })

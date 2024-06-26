@@ -9,7 +9,7 @@ use uv_configuration::{Concurrency, ExtrasSpecification, PreviewMode, Reinstall,
 use uv_dispatch::BuildDispatch;
 use uv_distribution::{Workspace, DEV_DEPENDENCIES};
 use uv_git::GitResolver;
-use uv_requirements::upgrade::{read_lockfile, LockedRequirements};
+use uv_requirements::upgrade::{read_lock_requirements, read_lockfile, LockedRequirements};
 use uv_resolver::{
     FlatIndex, InMemoryIndex, Lock, OptionsBuilder, PythonRequirement, RequiresPython,
 };
@@ -179,7 +179,11 @@ pub(super) async fn do_lock(
     };
 
     // If an existing lockfile exists, build up a set of preferences.
-    let (lock, LockedRequirements { preferences, git }) = read_lockfile(workspace, upgrade).await?;
+    let lock = read_lockfile(workspace, upgrade).await?;
+    let LockedRequirements { preferences, git } = lock
+        .as_ref()
+        .map(|lock| read_lock_requirements(lock, upgrade))
+        .unwrap_or_default();
 
     // Create the Git resolver.
     let git = GitResolver::from_refs(git);

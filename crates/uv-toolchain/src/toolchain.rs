@@ -89,7 +89,7 @@ impl Toolchain {
 
         // Perform a fetch aggressively if [`ToolchainFetchStrategy::Always`] and we
         // shouldn't try looking for a system toolchain first.
-        if matches!(preference, ToolchainPreference::PreferManaged)
+        if matches!(preference, ToolchainPreference::Managed)
             && matches!(toolchain_fetch, ToolchainFetchStrategy::Always)
         {
             if let Some(request) = PythonDownloadRequest::try_from_request(&request) {

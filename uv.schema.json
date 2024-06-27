@@ -1217,28 +1217,28 @@
     "ToolchainPreference": {
       "oneOf": [
         {
-          "description": "Only use managed toolchains, never use system toolchains.",
+          "description": "Only use managed toolchains; never use system toolchains.",
           "type": "string",
           "enum": [
             "only-managed"
           ]
         },
         {
-          "description": "Prefer installed managed toolchains, over system toolchains.\n\nIf `toolchain-fetch` is `if-necessary`, managed toolchains will only be downloaded if a system interpreter is not found. Set `toolchain-fetch` to `always` to prefer downloading a managed toolchain over using a system interpreter.",
+          "description": "Prefer installed managed toolchains over system toolchains.\n\nIf `toolchain-fetch` is `if-necessary`, managed toolchains will only be downloaded if a system interpreter is not found. Set `toolchain-fetch` to `always` to prefer downloading a managed toolchain over using a system interpreter.",
           "type": "string",
           "enum": [
-            "prefer-managed"
+            "managed"
           ]
         },
         {
-          "description": "Prefer system toolchains, only use managed toolchains if no system interpreter is found.\n\nSystem toolchains are preferred regardless of the `toolchain-fetch` option.",
+          "description": "Prefer system toolchains over managed toolchains.\n\nIf a system toolchain cannot be found, a managed toolchain can be used. System toolchains are preferred regardless of the `toolchain-fetch` option.",
           "type": "string",
           "enum": [
-            "prefer-system"
+            "system"
           ]
         },
         {
-          "description": "Only use system toolchains, never use managed toolchains.",
+          "description": "Only use system toolchains; never use managed toolchains.",
           "type": "string",
           "enum": [
             "only-system"

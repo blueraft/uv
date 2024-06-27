@@ -19,7 +19,9 @@ use uv_fs::Simplified;
 use uv_installer::SitePackages;
 use uv_requirements::RequirementsSource;
 use uv_tool::{entrypoint_paths, find_executable_directory, InstalledTools, Tool};
-use uv_toolchain::{EnvironmentPreference, Toolchain, ToolchainPreference, ToolchainRequest};
+use uv_toolchain::{
+    EnvironmentPreference, Toolchain, ToolchainFetchStrategy, ToolchainPreference, ToolchainRequest,
+};
 use uv_warnings::warn_user_once;
 
 use crate::commands::project::update_environment;
@@ -38,6 +40,7 @@ pub(crate) async fn install(
     settings: ResolverInstallerSettings,
     preview: PreviewMode,
     toolchain_preference: ToolchainPreference,
+    _toolchain_fetch: ToolchainFetchStrategy,
     connectivity: Connectivity,
     concurrency: Concurrency,
     native_tls: bool,
@@ -117,6 +120,7 @@ pub(crate) async fn install(
     };
     let tool = Tool::new(requirements, python.clone());
 
+    // TODO(zanieb): We should use `find_or_fetch` here.
     let interpreter = Toolchain::find(
         &python
             .as_deref()

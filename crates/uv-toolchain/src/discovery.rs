@@ -51,23 +51,46 @@ pub enum ToolchainRequest {
     /// Generally these refer to uv-managed toolchain downloads.
     Key(PythonDownloadRequest),
 }
+
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, serde::Deserialize)]
 #[serde(deny_unknown_fields, rename_all = "kebab-case")]
 #[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub enum ToolchainPreference {
-    /// Only use managed interpreters, never use system interpreters.
+    /// Only use managed toolchains, never use system toolchains.
     OnlyManaged,
-    /// Prefer installed managed interpreters, but use system interpreters if not found.
-    /// If neither can be found, download a managed interpreter.
+    /// Prefer installed managed toolchains, over system toolchains.
+    ///
+    /// If `toolchain-fetch` is `if-necessary`, managed toolchains will only be downloaded if a
+    /// system interpreter is not found. Set `toolchain-fetch` to `always` to prefer downloading
+    /// a managed toolchain over using a system interpreter.
     #[default]
-    PreferInstalledManaged,
-    /// Prefer managed interpreters, even if one needs to be downloaded, but use system interpreters if found.
     PreferManaged,
-    /// Prefer system interpreters, only use managed interpreters if no system interpreter is found.
+    /// Prefer system toolchains, only use managed toolchains if no system interpreter is found.
+    ///
+    /// System toolchains are preferred regardless of the `toolchain-fetch` option.
     PreferSystem,
-    /// Only use system interpreters, never use managed interpreters.
+    /// Only use system toolchains, never use managed toolchains.
     OnlySystem,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, serde::Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "kebab-case")]
+#[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+pub enum ToolchainFetchStrategy {
+    /// Always fetch a managed toolchain if it can be used to fulfull a request.
+    ///
+    /// If `toolchain-preference` is `only-system` this is equivalent to `never`.
+    /// If `toolchain-preference` is `prefer-system` this is equivalent to `if-necessary`.
+    Always,
+    /// Only fetch a managed toolchain if no other toolchain can be found.
+    #[default]
+    IfNecessary,
+    /// Never fetch a managed toolchain.
+    ///
+    /// All managed toolchains must be explicitly installed.
+    Never,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -318,11 +341,6 @@ fn python_executables_from_installed<'a>(
 
     match preference {
         ToolchainPreference::OnlyManaged => Box::new(from_managed_toolchains),
-        ToolchainPreference::PreferInstalledManaged => Box::new(
-            from_managed_toolchains
-                .chain(from_search_path)
-                .chain(from_py_launcher),
-        ),
         ToolchainPreference::PreferManaged => Box::new(
             from_managed_toolchains
                 .chain(from_search_path)
@@ -1163,9 +1181,7 @@ impl ToolchainPreference {
 
         match self {
             ToolchainPreference::OnlyManaged => matches!(source, ToolchainSource::Managed),
-            ToolchainPreference::PreferInstalledManaged
-            | Self::PreferManaged
-            | Self::PreferSystem => matches!(
+            Self::PreferManaged | Self::PreferSystem => matches!(
                 source,
                 ToolchainSource::Managed
                     | ToolchainSource::SearchPath
@@ -1193,10 +1209,13 @@ impl ToolchainPreference {
     }
 
     pub(crate) fn allows_managed(self) -> bool {
-        matches!(
-            self,
-            Self::PreferManaged | Self::PreferInstalledManaged | Self::OnlyManaged
-        )
+        matches!(self, Self::PreferManaged | Self::OnlyManaged)
+    }
+}
+
+impl ToolchainFetchStrategy {
+    pub fn allows_fetch(self) -> bool {
+        matches!(self, Self::Always | Self::IfNecessary)
     }
 }
 
@@ -1498,9 +1517,7 @@ impl fmt::Display for ToolchainPreference {
         match self {
             Self::OnlyManaged => f.write_str("managed toolchains"),
             Self::OnlySystem => f.write_str("system toolchains"),
-            Self::PreferInstalledManaged | Self::PreferManaged | Self::PreferSystem => {
-                f.write_str("managed or system toolchains")
-            }
+            Self::PreferManaged | Self::PreferSystem => f.write_str("managed or system toolchains"),
         }
     }
 }

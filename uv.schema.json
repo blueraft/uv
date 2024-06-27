@@ -228,6 +228,16 @@
         "$ref": "#/definitions/Source"
       }
     },
+    "toolchain-fetch": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/ToolchainFetchStrategy"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "toolchain-preference": {
       "anyOf": [
         {
@@ -1179,38 +1189,56 @@
         }
       }
     },
+    "ToolchainFetchStrategy": {
+      "oneOf": [
+        {
+          "description": "Always fetch a managed toolchain if it can be used to fulfull a request.\n\nIf `toolchain-preference` is `only-system` this is equivalent to `never`. If `toolchain-preference` is `prefer-system` this is equivalent to `if-necessary`.",
+          "type": "string",
+          "enum": [
+            "always"
+          ]
+        },
+        {
+          "description": "Only fetch a managed toolchain if no other toolchain can be found.",
+          "type": "string",
+          "enum": [
+            "if-necessary"
+          ]
+        },
+        {
+          "description": "Never fetch a managed toolchain.\n\nAll managed toolchains must be explicitly installed.",
+          "type": "string",
+          "enum": [
+            "never"
+          ]
+        }
+      ]
+    },
     "ToolchainPreference": {
       "oneOf": [
         {
-          "description": "Only use managed interpreters, never use system interpreters.",
+          "description": "Only use managed toolchains, never use system toolchains.",
           "type": "string",
           "enum": [
             "only-managed"
           ]
         },
         {
-          "description": "Prefer installed managed interpreters, but use system interpreters if not found. If neither can be found, download a managed interpreter.",
-          "type": "string",
-          "enum": [
-            "prefer-installed-managed"
-          ]
-        },
-        {
-          "description": "Prefer managed interpreters, even if one needs to be downloaded, but use system interpreters if found.",
+          "description": "Prefer installed managed toolchains, over system toolchains.\n\nIf `toolchain-fetch` is `if-necessary`, managed toolchains will only be downloaded if a system interpreter is not found. Set `toolchain-fetch` to `always` to prefer downloading a managed toolchain over using a system interpreter.",
           "type": "string",
           "enum": [
             "prefer-managed"
           ]
         },
         {
-          "description": "Prefer system interpreters, only use managed interpreters if no system interpreter is found.",
+          "description": "Prefer system toolchains, only use managed toolchains if no system interpreter is found.\n\nSystem toolchains are preferred regardless of the `toolchain-fetch` option.",
           "type": "string",
           "enum": [
             "prefer-system"
           ]
         },
         {
-          "description": "Only use system interpreters, never use managed interpreters.",
+          "description": "Only use system toolchains, never use managed toolchains.",
           "type": "string",
           "enum": [
             "only-system"

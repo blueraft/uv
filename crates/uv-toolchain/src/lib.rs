@@ -3,7 +3,8 @@ use thiserror::Error;
 
 pub use crate::discovery::{
     find_toolchains, EnvironmentPreference, Error as DiscoveryError, SystemPython,
-    ToolchainNotFound, ToolchainPreference, ToolchainRequest, ToolchainSource, VersionRequest,
+    ToolchainFetchStrategy, ToolchainNotFound, ToolchainPreference, ToolchainRequest,
+    ToolchainSource, VersionRequest,
 };
 pub use crate::environment::PythonEnvironment;
 pub use crate::implementation::ImplementationName;

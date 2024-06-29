@@ -19,7 +19,7 @@ use uv_requirements::{RequirementsSource, RequirementsSpecification};
 use uv_resolver::{FlatIndex, InMemoryIndex, OptionsBuilder, PythonRequirement, RequiresPython};
 use uv_toolchain::{
     request_from_version_file, EnvironmentPreference, Interpreter, PythonEnvironment, Toolchain,
-    ToolchainPreference, ToolchainRequest, VersionRequest,
+    ToolchainFetch, ToolchainPreference, ToolchainRequest, VersionRequest,
 };
 use uv_types::{BuildIsolation, HashStrategy, InFlight};
 use uv_warnings::warn_user;
@@ -136,10 +136,12 @@ pub(crate) fn interpreter_meets_requirements(
 }
 
 /// Find the interpreter to use in the current project.
+#[allow(clippy::too_many_arguments)]
 pub(crate) async fn find_interpreter(
     workspace: &Workspace,
     python_request: Option<ToolchainRequest>,
     toolchain_preference: ToolchainPreference,
+    toolchain_fetch: ToolchainFetch,
     connectivity: Connectivity,
     native_tls: bool,
     cache: &Cache,
@@ -186,7 +188,8 @@ pub(crate) async fn find_interpreter(
         python_request,
         EnvironmentPreference::OnlySystem,
         toolchain_preference,
-        client_builder,
+        toolchain_fetch,
+        &client_builder,
         cache,
     )
     .await?
@@ -213,10 +216,12 @@ pub(crate) async fn find_interpreter(
 }
 
 /// Initialize a virtual environment for the current project.
+#[allow(clippy::too_many_arguments)]
 pub(crate) async fn init_environment(
     workspace: &Workspace,
     python: Option<ToolchainRequest>,
     toolchain_preference: ToolchainPreference,
+    toolchain_fetch: ToolchainFetch,
     connectivity: Connectivity,
     native_tls: bool,
     cache: &Cache,
@@ -254,6 +259,7 @@ pub(crate) async fn init_environment(
         workspace,
         python,
         toolchain_preference,
+        toolchain_fetch,
         connectivity,
         native_tls,
         cache,

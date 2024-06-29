@@ -12,7 +12,7 @@ use uv_git::GitResolver;
 use uv_normalize::PackageName;
 use uv_requirements::{NamedRequirementsResolver, RequirementsSource, RequirementsSpecification};
 use uv_resolver::{FlatIndex, InMemoryIndex};
-use uv_toolchain::{ToolchainPreference, ToolchainRequest};
+use uv_toolchain::{ToolchainFetch, ToolchainPreference, ToolchainRequest};
 use uv_types::{BuildIsolation, HashStrategy, InFlight};
 use uv_warnings::warn_user_once;
 
@@ -38,6 +38,7 @@ pub(crate) async fn add(
     python: Option<String>,
     settings: ResolverInstallerSettings,
     toolchain_preference: ToolchainPreference,
+    toolchain_fetch: ToolchainFetch,
     preview: PreviewMode,
     connectivity: Connectivity,
     concurrency: Concurrency,
@@ -64,6 +65,7 @@ pub(crate) async fn add(
         project.workspace(),
         python.as_deref().map(ToolchainRequest::parse),
         toolchain_preference,
+        toolchain_fetch,
         connectivity,
         native_tls,
         cache,

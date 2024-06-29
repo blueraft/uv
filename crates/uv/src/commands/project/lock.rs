@@ -13,7 +13,7 @@ use uv_requirements::upgrade::{read_lockfile, LockedRequirements};
 use uv_resolver::{
     FlatIndex, InMemoryIndex, Lock, OptionsBuilder, PythonRequirement, RequiresPython,
 };
-use uv_toolchain::{Interpreter, ToolchainPreference, ToolchainRequest};
+use uv_toolchain::{Interpreter, ToolchainFetch, ToolchainPreference, ToolchainRequest};
 use uv_types::{BuildIsolation, EmptyInstalledPackages, HashStrategy, InFlight};
 use uv_warnings::{warn_user, warn_user_once};
 
@@ -29,6 +29,7 @@ pub(crate) async fn lock(
     settings: ResolverSettings,
     preview: PreviewMode,
     toolchain_preference: ToolchainPreference,
+    toolchain_fetch: ToolchainFetch,
     connectivity: Connectivity,
     concurrency: Concurrency,
     native_tls: bool,
@@ -47,6 +48,7 @@ pub(crate) async fn lock(
         &workspace,
         python.as_deref().map(ToolchainRequest::parse),
         toolchain_preference,
+        toolchain_fetch,
         connectivity,
         native_tls,
         cache,

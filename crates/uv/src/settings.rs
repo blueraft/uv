@@ -15,7 +15,7 @@ use uv_cli::{
     PipCheckArgs, PipCompileArgs, PipFreezeArgs, PipInstallArgs, PipListArgs, PipShowArgs,
     PipSyncArgs, PipTreeArgs, PipUninstallArgs, RemoveArgs, RunArgs, SyncArgs, ToolInstallArgs,
     ToolListArgs, ToolRunArgs, ToolchainFindArgs, ToolchainInstallArgs, ToolchainListArgs,
-    VenvArgs,
+    ToolchainUninstallArgs, VenvArgs,
 };
 use uv_client::Connectivity;
 use uv_configuration::{
@@ -349,6 +349,26 @@ impl ToolchainInstallSettings {
         let ToolchainInstallArgs { targets, force } = args;
 
         Self { targets, force }
+    }
+}
+
+/// The resolved settings to use for a `toolchain uninstall` invocation.
+#[allow(clippy::struct_excessive_bools)]
+#[derive(Debug, Clone)]
+pub(crate) struct ToolchainUninstallSettings {
+    pub(crate) targets: Vec<String>,
+}
+
+impl ToolchainUninstallSettings {
+    /// Resolve the [`ToolchainUninstallSettings`] from the CLI and filesystem configuration.
+    #[allow(clippy::needless_pass_by_value)]
+    pub(crate) fn resolve(
+        args: ToolchainUninstallArgs,
+        _filesystem: Option<FilesystemOptions>,
+    ) -> Self {
+        let ToolchainUninstallArgs { targets } = args;
+
+        Self { targets }
     }
 }
 

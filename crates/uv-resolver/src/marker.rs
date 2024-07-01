@@ -1,6 +1,5 @@
 #![allow(clippy::enum_glob_use)]
 
-use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::ops::Bound::{self, *};
 use std::ops::RangeBounds;
@@ -13,7 +12,7 @@ use pep508_rs::{
 
 use crate::pubgrub::PubGrubSpecifier;
 use crate::RequiresPythonBound;
-use pubgrub::range::{Range as PubGrubRange, Range};
+use pubgrub::range::Range as PubGrubRange;
 
 /// Returns `true` if there is no environment in which both marker trees can both apply, i.e.
 /// the expression `first and second` is always false.
@@ -92,7 +91,7 @@ pub(crate) fn requires_python_marker(tree: &MarkerTree) -> Option<RequiresPython
             let specifier = PubGrubSpecifier::try_from(specifier).ok()?;
 
             // Convert to PubGrub range and perform a union.
-            let range = Range::from(specifier);
+            let range = PubGrubRange::from(specifier);
             let (lower, _) = range.iter().next()?;
 
             // Extract the lower bound.
@@ -105,7 +104,7 @@ pub(crate) fn requires_python_marker(tree: &MarkerTree) -> Option<RequiresPython
         MarkerTree::Or(trees) => {
             // If all subtrees have a minimum, take the maximum.
             let mut version = None;
-            for tree in trees.iter() {
+            for tree in trees {
                 let next = requires_python_marker(tree)?;
                 version = match version {
                     Some(version) => Some(std::cmp::max(version, next)),

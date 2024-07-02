@@ -6,7 +6,10 @@ use toml_edit::{Array, DocumentMut, Item, RawString, Table, TomlError, Value};
 
 use pep508_rs::{ExtraName, PackageName, Requirement, VersionOrUrl};
 
-use crate::pyproject::{DependencyType, PyProjectToml, Source};
+use crate::{
+    pyproject::{DependencyType, PyProjectToml, Source},
+    ProjectWorkspace,
+};
 
 /// Raw and mutable representation of a `pyproject.toml`.
 ///
@@ -14,6 +17,7 @@ use crate::pyproject::{DependencyType, PyProjectToml, Source};
 /// preserving comments and other structure, such as `uv add` and `uv remove`.
 pub struct PyProjectTomlMut {
     doc: DocumentMut,
+    insert_project: bool,
 }
 
 #[derive(Error, Debug)]
@@ -30,12 +34,43 @@ pub enum Error {
     Ambiguous,
 }
 
+pub enum TomlVariant {
+    Project(ProjectWorkspace),
+    Script(String),
+}
+
 impl PyProjectTomlMut {
     /// Initialize a `PyProjectTomlMut` from a `PyProjectToml`.
-    pub fn from_toml(pyproject: &PyProjectToml) -> Result<Self, Error> {
+    pub fn from_toml(toml: &TomlVariant) -> Result<Self, Error> {
+        let (doc, insert_project) = match toml {
+            TomlVariant::Script(contents) => (contents.parse().map_err(Box::new)?, false),
+            TomlVariant::Project(project) => (
+                project
+                    .current_project()
+                    .pyproject_toml()
+                    .raw
+                    .parse()
+                    .map_err(Box::new)?,
+                true,
+            ),
+        };
         Ok(Self {
-            doc: pyproject.raw.parse().map_err(Box::new)?,
+            doc,
+            insert_project,
         })
+    }
+
+    fn doc(&mut self) -> Result<&mut toml_edit::Table, Error> {
+        let doc = if self.insert_project {
+            self.doc
+                .entry("project")
+                .or_insert(Item::Table(Table::new()))
+                .as_table_mut()
+                .ok_or(Error::MalformedDependencies)?
+        } else {
+            self.doc.as_table_mut()
+        };
+        Ok(doc)
     }
 
     /// Adds a dependency to `project.dependencies`.
@@ -45,12 +80,9 @@ impl PyProjectTomlMut {
         source: Option<Source>,
     ) -> Result<(), Error> {
         // Get or create `project.dependencies`.
+
         let dependencies = self
-            .doc
-            .entry("project")
-            .or_insert(Item::Table(Table::new()))
-            .as_table_mut()
-            .ok_or(Error::MalformedDependencies)?
+            .doc()?
             .entry("dependencies")
             .or_insert(Item::Value(Value::Array(Array::new())))
             .as_array_mut()
@@ -107,11 +139,7 @@ impl PyProjectTomlMut {
     ) -> Result<(), Error> {
         // Get or create `project.optional-dependencies`.
         let optional_dependencies = self
-            .doc
-            .entry("project")
-            .or_insert(Item::Table(Table::new()))
-            .as_table_mut()
-            .ok_or(Error::MalformedDependencies)?
+            .doc()?
             .entry("optional-dependencies")
             .or_insert(Item::Table(Table::new()))
             .as_table_mut()

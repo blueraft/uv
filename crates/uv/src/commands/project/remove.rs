@@ -4,8 +4,8 @@ use pep508_rs::PackageName;
 use uv_cache::Cache;
 use uv_client::Connectivity;
 use uv_configuration::{Concurrency, ExtrasSpecification, PreviewMode};
-use uv_distribution::pyproject::DependencyType;
 use uv_distribution::pyproject_mut::PyProjectTomlMut;
+use uv_distribution::{pyproject::DependencyType, pyproject_mut::TomlVariant};
 use uv_distribution::{ProjectWorkspace, VirtualProject, Workspace};
 use uv_toolchain::{ToolchainFetch, ToolchainPreference, ToolchainRequest};
 use uv_warnings::{warn_user, warn_user_once};
@@ -44,8 +44,9 @@ pub(crate) async fn remove(
     } else {
         ProjectWorkspace::discover(&std::env::current_dir()?, None).await?
     };
+    let toml = TomlVariant::Project(project);
 
-    let mut pyproject = PyProjectTomlMut::from_toml(project.current_project().pyproject_toml())?;
+    let mut pyproject = PyProjectTomlMut::from_toml(&toml)?;
     for req in requirements {
         match dependency_type {
             DependencyType::Production => {
@@ -75,6 +76,10 @@ pub(crate) async fn remove(
             }
         }
     }
+
+    let TomlVariant::Project(project) = toml else {
+        anyhow::bail!("")
+    };
 
     // Save the modified `pyproject.toml`.
     fs_err::write(

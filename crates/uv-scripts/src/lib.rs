@@ -29,12 +29,10 @@ pub enum Pep723Error {
     Toml(#[from] toml::de::Error),
 }
 
-/// Read the PEP 723 `script` metadata from a Python file, if it exists.
+/// Read the PEP 723 `script` content from a Python file, if it exists.
 ///
 /// See: <https://peps.python.org/pep-0723/>
-pub async fn read_pep723_metadata(
-    file: impl AsRef<Path>,
-) -> Result<Option<Pep723Metadata>, Pep723Error> {
+pub async fn read_pep723_content(file: impl AsRef<Path>) -> Result<Option<String>, Pep723Error> {
     let contents = match fs_err::tokio::read(file).await {
         Ok(contents) => contents,
         Err(err) if err.kind() == io::ErrorKind::NotFound => return Ok(None),
@@ -46,6 +44,18 @@ pub async fn read_pep723_metadata(
         return Ok(None);
     };
 
+    Ok(Some(contents))
+}
+
+/// Read the PEP 723 `script` metadata from a Python file, if it exists.
+///
+/// See: <https://peps.python.org/pep-0723/>
+pub async fn read_pep723_metadata(
+    file: impl AsRef<Path>,
+) -> Result<Option<Pep723Metadata>, Pep723Error> {
+    let Some(contents) = read_pep723_content(&file).await? else {
+        return Ok(None);
+    };
     // Parse the metadata.
     let metadata = toml::from_str(&contents)?;
 

@@ -719,6 +719,7 @@ async fn run() -> Result<ExitStatus> {
         Commands::Project(ProjectCommand::Add(args)) => {
             // Resolve the settings from the command-line arguments and workspace configuration.
             let args = settings::AddSettings::resolve(args, filesystem);
+            dbg!(&args);
             show_settings!(args);
 
             // Initialize the cache.
@@ -727,6 +728,7 @@ async fn run() -> Result<ExitStatus> {
             commands::add(
                 args.requirements,
                 args.editable,
+                args.script,
                 args.dependency_type,
                 args.raw_sources,
                 args.rev,

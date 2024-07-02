@@ -1799,6 +1799,10 @@ pub struct AddArgs {
     #[arg(long, default_missing_value = "true", num_args(0..=1))]
     pub editable: Option<bool>,
 
+    /// Add the requirements to PEP 723 script
+    #[arg(long)]
+    pub script: Option<PathBuf>,
+
     /// Add source requirements to the `project.dependencies` section of the `pyproject.toml`.
     ///
     /// Without this flag uv will try to use `tool.uv.sources` for any sources.

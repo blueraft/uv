@@ -30,6 +30,11 @@ classifiers = [
   "Topic :: Software Development :: Libraries",
 ]
 readme = "README.md"
+dependencies = [
+    "click",
+    "script",
+    "test-723-py",
+]
 
 [project.urls]
 Repository = "https://github.com/astral-sh/uv"

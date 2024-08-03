@@ -139,37 +139,8 @@ jobs:
   # For Ubuntu and Windows, this requires Organization-level configuration
   # See: https://docs.github.com/en/actions/using-github-hosted-runners/about-larger-runners/about-larger-runners#about-ubuntu-and-windows-larger-runners
 
-  cargo-build-test-linux:
-    needs: determine_changes
-    if: ${{ github.repository == 'astral-sh/uv' && (needs.determine_changes.outputs.code == 'true' || github.ref == 'refs/heads/main') }}
-    runs-on:
-      labels: "ubuntu-latest-large"
-    name: "build tests | ubuntu"
-    steps:
-      - uses: actions/checkout@v4
-      - name: "Install Rust toolchain"
-        run: rustup show
-
-      - uses: rui314/setup-mold@v1
-
-      - uses: Swatinem/rust-cache@v2
-
-      - name: "Install cargo nextest"
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-nextest
-
-      - name: Build tests
-        run: cargo nextest archive --archive-file nextest-archive.tar.zst --all --all-features
-
-      - name: Upload archive
-        uses: actions/upload-artifact@v4
-        with:
-          name: nextest-archive-linux
-          path: nextest-archive.tar.zst
-
   cargo-test-linux:
-    needs: [determine_changes, cargo-build-test-linux]
+    needs: [determine_changes]
     if: ${{ github.repository == 'astral-sh/uv' && (needs.determine_changes.outputs.code == 'true' || github.ref == 'refs/heads/main') }}
     strategy:
       matrix:
@@ -196,15 +167,11 @@ jobs:
         with:
           tool: cargo-nextest
 
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: nextest-archive-linux
-
       - name: "Cargo test"
         run: |
           cargo nextest run \
-            --archive-file nextest-archive.tar.zst \
+            --features python-patch \
+            --workspace \
             --partition count:${{ matrix.partition }}/4 \
             --status-level skip --failure-output immediate-final --no-fail-fast -j 12 --final-status-level slow
 

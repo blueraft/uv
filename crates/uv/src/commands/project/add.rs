@@ -112,6 +112,10 @@ pub(crate) async fn add(
     let reporter = PythonDownloadReporter::single(printer);
 
     let target = if let Some(script) = script {
+        // Adding dependencies to groups is not allowed per specification for scripts.
+        if matches!(dependency_type, DependencyType::Group(_)) {
+            bail!("the argument '--group <GROUP>' cannot be used with '--script <SCRIPT>'")
+        }
         // If we found a PEP 723 script and the user provided a project-only setting, warn.
         if package.is_some() {
             warn_user_once!(

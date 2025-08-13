@@ -1512,13 +1512,16 @@ mod tests {
             request.version,
             Some(VersionRequest::from_str("3.12.0").unwrap())
         );
-        assert_eq!(request.os, Some(Os(target_lexicon::OperatingSystem::Linux)));
+        assert_eq!(
+            request.os,
+            Some(Os::new(target_lexicon::OperatingSystem::Linux))
+        );
         assert_eq!(
             request.arch,
-            Some(ArchRequest::Explicit(Arch {
-                family: target_lexicon::Architecture::X86_64,
-                variant: None,
-            }))
+            Some(ArchRequest::Explicit(Arch::new(
+                target_lexicon::Architecture::X86_64,
+                None,
+            )))
         );
         assert_eq!(
             request.libc,
@@ -1540,10 +1543,10 @@ mod tests {
         assert_eq!(request.os, None);
         assert_eq!(
             request.arch,
-            Some(ArchRequest::Explicit(Arch {
-                family: target_lexicon::Architecture::X86_64,
-                variant: None,
-            }))
+            Some(ArchRequest::Explicit(Arch::new(
+                target_lexicon::Architecture::X86_64,
+                None,
+            )))
         );
         assert_eq!(request.libc, None);
     }
@@ -1556,7 +1559,10 @@ mod tests {
 
         assert_eq!(request.implementation, Some(ImplementationName::PyPy));
         assert_eq!(request.version, None);
-        assert_eq!(request.os, Some(Os(target_lexicon::OperatingSystem::Linux)));
+        assert_eq!(
+            request.os,
+            Some(Os::new(target_lexicon::OperatingSystem::Linux))
+        );
         assert_eq!(request.arch, None);
         assert_eq!(request.libc, None);
     }
@@ -1598,14 +1604,14 @@ mod tests {
         assert_eq!(request.version, None);
         assert_eq!(
             request.os,
-            Some(Os(target_lexicon::OperatingSystem::Windows))
+            Some(Os::new(target_lexicon::OperatingSystem::Windows))
         );
         assert_eq!(
             request.arch,
-            Some(ArchRequest::Explicit(Arch {
-                family: target_lexicon::Architecture::X86_64,
-                variant: None,
-            }))
+            Some(ArchRequest::Explicit(Arch::new(
+                target_lexicon::Architecture::X86_64,
+                None,
+            )))
         );
         assert_eq!(request.libc, None);
     }
@@ -1669,10 +1675,10 @@ mod tests {
         assert_eq!(request.os, None);
         assert_eq!(
             request.arch,
-            Some(ArchRequest::Explicit(Arch {
-                family: target_lexicon::Architecture::X86_64,
-                variant: None,
-            }))
+            Some(ArchRequest::Explicit(Arch::new(
+                target_lexicon::Architecture::X86_64,
+                None,
+            )))
         );
         assert_eq!(request.libc, None);
     }
